@@ -62,3 +62,18 @@ credentials in `.env` only; it is excluded from Git.
    ```
 
    Open the Vite URL printed in the terminal (normally `http://localhost:5173`).
+
+## Run the backend in Docker
+
+Build the image from the `backend` directory as the build context, then pass
+the root `.env` file to the container at runtime. The image copies only the
+backend application files; database credentials are not included in it.
+
+```powershell
+docker build -f backend/Dockerfile -t devops-backend backend
+docker run --rm --env-file .env -p 8000:8000 devops-backend
+```
+
+The container receives `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and
+`DB_PASSWORD` from `.env`. For a Supabase Session Pooler connection, use the
+pooler host and port and set `PGSSLMODE=require` in the root `.env`.
