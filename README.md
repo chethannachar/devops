@@ -1,8 +1,9 @@
 # DevOps Practice User Directory
 
 A small local application for practicing React with Vite, FastAPI, and PostgreSQL.
-The backend creates the `users` table when it starts. Passwords are stored as
-bcrypt hashes; the API only returns usernames.
+The backend creates and migrates the `users` table when it starts. Passwords
+are stored as bcrypt hashes; the API returns usernames and places of birth, but
+never passwords or password hashes.
 
 ## Project layout
 

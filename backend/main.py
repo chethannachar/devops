@@ -76,6 +76,7 @@ app.add_middleware(
 class UserRegistration(BaseModel):
     username: Annotated[str, Field(min_length=1, max_length=100)]
     password: Annotated[str, Field(min_length=1)]
+    place_of_birth: str = ""
 
     @field_validator("password")
     @classmethod
@@ -87,6 +88,7 @@ class UserRegistration(BaseModel):
 
 class UserResponse(BaseModel):
     username: str
+    place_of_birth: str | None
 
 
 @app.get("/health")
@@ -103,28 +105,28 @@ def register_user(user: UserRegistration) -> UserResponse:
         with connect_to_database() as connection:
             row = connection.execute(
                 """
-                INSERT INTO users (username, password_hash)
-                VALUES (%s, %s)
-                RETURNING username
+                INSERT INTO users (username, place_of_birth, password_hash)
+                VALUES (%s, %s, %s)
+                RETURNING username, place_of_birth
                 """,
-                (user.username, hashed_password),
+                (user.username, user.place_of_birth, hashed_password),
             ).fetchone()
     except psycopg.errors.UniqueViolation as error:
         raise HTTPException(
             status_code=409, detail="A user with that username already exists."
         ) from error
 
-    return UserResponse(username=row[0])
+    return UserResponse(username=row[0], place_of_birth=row[1])
 
 
 @app.get("/users/{username}", response_model=UserResponse)
 def get_user(username: str) -> UserResponse:
     with connect_to_database() as connection:
         row = connection.execute(
-            "SELECT username FROM users WHERE username = %s",
+            "SELECT username, place_of_birth FROM users WHERE username = %s",
             (username,),
         ).fetchone()
 
     if row is None:
         raise HTTPException(status_code=404, detail="User not found.")
-    return UserResponse(username=row[0])
+    return UserResponse(username=row[0], place_of_birth=row[1])

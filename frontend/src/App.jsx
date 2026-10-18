@@ -16,7 +16,11 @@ async function readApiResponse(response) {
 }
 
 function App() {
-  const [registration, setRegistration] = useState({ username: '', password: '' })
+  const [registration, setRegistration] = useState({
+    username: '',
+    place_of_birth: '',
+    password: '',
+  })
   const [lookupUsername, setLookupUsername] = useState('')
   const [registrationMessage, setRegistrationMessage] = useState('')
   const [registrationError, setRegistrationError] = useState('')
@@ -39,7 +43,7 @@ function App() {
       })
       const user = await readApiResponse(response)
       setRegistrationMessage(`User "${user.username}" registered successfully.`)
-      setRegistration({ username: '', password: '' })
+      setRegistration({ username: '', place_of_birth: '', password: '' })
     } catch (error) {
       setRegistrationError(error.message || 'Could not register the user.')
     } finally {
@@ -58,7 +62,11 @@ function App() {
         `${API_BASE_URL}/users/${encodeURIComponent(lookupUsername.trim())}`,
       )
       const user = await readApiResponse(response)
-      setLookupResult(user.username)
+      setLookupResult(
+        `Username found: ${user.username} · Place of birth: ${
+          user.place_of_birth || 'Not provided'
+        }`,
+      )
     } catch (error) {
       setLookupError(error.message || 'Could not find the user.')
     } finally {
@@ -94,6 +102,20 @@ function App() {
               value={registration.username}
               onChange={(event) =>
                 setRegistration({ ...registration, username: event.target.value })
+              }
+              required
+            />
+            <label htmlFor="register-place-of-birth">Place of birth</label>
+            <input
+              id="register-place-of-birth"
+              name="place_of_birth"
+              autoComplete="off"
+              value={registration.place_of_birth}
+              onChange={(event) =>
+                setRegistration({
+                  ...registration,
+                  place_of_birth: event.target.value,
+                })
               }
               required
             />
@@ -149,7 +171,7 @@ function App() {
           </form>
           {lookupResult && (
             <p className="feedback result" role="status">
-              Username found: <strong>{lookupResult}</strong>
+              {lookupResult}
             </p>
           )}
           {lookupError && (
