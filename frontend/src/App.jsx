@@ -105,7 +105,7 @@ function App() {
               }
               required
             />
-            <label htmlFor="register-place-of-birth">Place of birth</label>
+            <label htmlFor="register-place-of-birth">Place of birt</label>
             <input
               id="register-place-of-birth"
               name="place_of_birth"
