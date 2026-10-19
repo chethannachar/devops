@@ -77,7 +77,7 @@ function App() {
   return (
     <main className="page">
       <header className="page-header">
-        <p className="eyebrow">DEVOPS PRACTICE</p>
+        <p className="eyebrow">DEVOPS </p>
         <h1>User directory</h1>
         <p className="intro">
           A small app for practicing React, FastAPI, and PostgreSQL.
