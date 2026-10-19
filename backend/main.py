@@ -123,7 +123,7 @@ def register_user(user: UserRegistration) -> UserResponse:
 def get_user(username: str) -> UserResponse:
     with connect_to_database() as connection:
         row = connection.execute(
-            "SELECT username, place_of_birth FROM users WHERE username = %s",
+            "SELECT username, place_of_birt FROM users WHERE username = %s",
             (username,),
         ).fetchone()
 
