@@ -1,8 +1,35 @@
 import { useState } from 'react'
 
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
-).replace(/\/$/, '')
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim()
+
+function getApiBaseUrl() {
+  if (!VITE_API_BASE_URL) {
+    throw new Error(
+      'VITE_API_BASE_URL is not configured. Set it to the deployed FastAPI backend URL.',
+    )
+  }
+
+  let apiUrl
+  try {
+    apiUrl = new URL(VITE_API_BASE_URL)
+  } catch {
+    throw new Error(
+      'VITE_API_BASE_URL must be an absolute URL, including https://.',
+    )
+  }
+
+  if (apiUrl.protocol !== 'https:' && apiUrl.protocol !== 'http:') {
+    throw new Error('VITE_API_BASE_URL must use https:// or http://.')
+  }
+
+  if (typeof window !== 'undefined' && apiUrl.origin === window.location.origin) {
+    throw new Error(
+      'VITE_API_BASE_URL must point to the backend, not the frontend domain.',
+    )
+  }
+
+  return apiUrl.toString().replace(/\/+$/, '')
+}
 
 async function readApiResponse(response) {
   const body = await response.json().catch(() => ({}))
@@ -35,7 +62,7 @@ function App() {
     setRegistering(true)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const response = await fetch(`${getApiBaseUrl()}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(registration),
@@ -58,7 +85,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/users/${encodeURIComponent(lookupUsername.trim())}`,
+        `${getApiBaseUrl()}/users/${encodeURIComponent(lookupUsername.trim())}`,
       )
       const user = await readApiResponse(response)
       setLookupResult(
@@ -182,7 +209,8 @@ function App() {
       </div>
 
       <footer>
-        API endpoint: <code>{API_BASE_URL}</code>
+        API endpoint:{' '}
+        <code>{VITE_API_BASE_URL || 'VITE_API_BASE_URL is not configured'}</code>
       </footer>
     </main>
   )
