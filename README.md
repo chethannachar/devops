@@ -78,3 +78,24 @@ docker run --rm --env-file .env -p 8000:8000 devops-backend
 The container receives `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and
 `DB_PASSWORD` from `.env`. For a Supabase Session Pooler connection, use the
 pooler host and port and set `PGSSLMODE=require` in the root `.env`.
+
+## Deploy the backend to Vercel
+
+Import the repository into Vercel and use the repository root as the project
+root. The root `api/index.py` exposes the existing `backend/main.py` FastAPI
+application, and the root `requirements.txt` installs the dependencies listed
+in `backend/requirements.txt`.
+
+Add these variables in the Vercel project's Environment Variables settings;
+do not commit database credentials:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `CORS_ORIGINS` (comma-separated browser origins, including the deployed
+  frontend origin)
+
+Set `PGSSLMODE=require` if required by your database provider. Deployments use
+Python 3.12 as specified by `.python-version`.
