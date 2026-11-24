@@ -1,6 +1,6 @@
 import os
-from contextlib import asynccontextmanager
 from pathlib import Path
+from threading import Lock
 from typing import Annotated
 
 import bcrypt
@@ -19,9 +19,13 @@ DB_PORT = int(os.getenv("DB_PORT", "5432"))
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+_database_initialized = False
+_database_initialization_lock = Lock()
 
 
 def connect_to_database():
+    global _database_initialized
+
     missing_settings = [
         name
         for name, value in (
@@ -36,27 +40,27 @@ def connect_to_database():
             "Missing database settings in the project root .env: "
             + ", ".join(missing_settings)
         )
-    return psycopg.connect(
+    connection = psycopg.connect(
         host=DB_HOST,
         port=DB_PORT,
         dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD,
     )
+    if not _database_initialized:
+        try:
+            with _database_initialization_lock:
+                if not _database_initialized:
+                    connection.execute(INIT_DB_SQL.read_text(encoding="utf-8"))
+                    connection.commit()
+                    _database_initialized = True
+        except Exception:
+            connection.close()
+            raise
+    return connection
 
 
-def initialize_database() -> None:
-    with connect_to_database() as connection:
-        connection.execute(INIT_DB_SQL.read_text(encoding="utf-8"))
-
-
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    initialize_database()
-    yield
-
-
-app = FastAPI(title="DevOps Practice User API", lifespan=lifespan)
+app = FastAPI(title="DevOps Practice User API")
 
 allowed_origins = [
     "http://localhost:5173",
@@ -130,7 +134,7 @@ def register_user(user: UserRegistration) -> UserResponse:
 def get_user(username: str) -> UserResponse:
     with connect_to_database() as connection:
         row = connection.execute(
-            "SELECT username, place_of_birt FROM users WHERE username = %s",
+            "SELECT username, place_of_birth FROM users WHERE username = %s",
             (username,),
         ).fetchone()
 
